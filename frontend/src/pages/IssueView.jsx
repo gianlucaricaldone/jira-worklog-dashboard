@@ -4,7 +4,7 @@ import { getIssueDetail, syncIssueWorklogs } from '../api/client'
 import { formatHours } from '../hooks/useData'
 import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
-import { UserCard, StatCard, ErrorState, CardSkeleton } from '../components/Cards'
+import { UserCard, StatCard, ErrorState, CardSkeleton, EmptyState } from '../components/Cards'
 import { TrendChart, ComparisonBarChart, ChartCard } from '../components/Charts'
 
 const RefreshIcon = () => (
@@ -75,6 +75,87 @@ export default function IssueView({ dateRange }) {
     }
 
     if (!data) return null
+
+    // Check if data is empty
+    const isDataEmpty = data.worklogs.length === 0 && data.total_hours === 0
+
+    if (isDataEmpty) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="glass-card p-6">
+                    <div className="flex items-start gap-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors"
+                        >
+                            <svg className="w-5 h-5 text-dark-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-blue to-cyan-600 flex items-center justify-center flex-shrink-0">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                        </div>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="px-2 py-1 text-xs font-medium rounded-full bg-accent-blue/20 text-accent-blue">
+                                    {data.issue_key}
+                                </span>
+                            </div>
+                            <h1 className="text-2xl font-bold text-dark-100">{data.issue_summary || data.issue_key}</h1>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Sync Button anche per empty state */}
+                <div className="glass-card p-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="font-medium text-dark-100">Sincronizza da JIRA</h3>
+                            <p className="text-sm text-dark-400">Aggiorna i worklog di questa issue direttamente da JIRA</p>
+                        </div>
+                        <button
+                            onClick={handleSync}
+                            disabled={syncing}
+                            className="flex items-center gap-2 px-4 py-2 bg-accent-blue text-white rounded-lg hover:bg-accent-blue/80 transition-colors disabled:opacity-50"
+                        >
+                            {syncing ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                    Sincronizzazione...
+                                </>
+                            ) : (
+                                <>
+                                    <RefreshIcon />
+                                    Sincronizza Issue
+                                </>
+                            )}
+                        </button>
+                    </div>
+                    {syncResult && (
+                        <div className="mt-4 p-3 bg-accent-green/10 border border-accent-green/30 rounded-lg">
+                            <p className="text-accent-green text-sm">{syncResult.message}</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="glass-card p-8">
+                    <EmptyState
+                        title="Nessun worklog registrato"
+                        message="Non ci sono ore registrate per questa issue nel periodo selezionato. Prova a sincronizzare da JIRA."
+                        icon={
+                            <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        }
+                        actionLabel="Torna indietro"
+                        onAction={() => navigate(-1)}
+                    />
+                </div>
+            </div>
+        )
+    }
 
     // Get badge class for parent type
     const getParentBadgeClass = (type) => {

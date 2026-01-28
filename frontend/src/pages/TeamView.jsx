@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getTeamDetail } from '../api/client'
 import { formatHours } from '../hooks/useData'
-import { StatCard, UserCard, EpicCard, ProgressBar, CardSkeleton, ErrorState } from '../components/Cards'
+import { StatCard, UserCard, EpicCard, ProgressBar, CardSkeleton, ErrorState, EmptyState } from '../components/Cards'
 import { TrendChart, ComparisonBarChart, DistributionChart, ChartCard } from '../components/Charts'
 
 export default function TeamView({ dateRange, selectedInstance }) {
@@ -48,6 +48,44 @@ export default function TeamView({ dateRange, selectedInstance }) {
     }
 
     if (!data) return null
+
+    // Check if data is empty
+    const isDataEmpty = data.members.length === 0 && data.total_hours === 0
+
+    if (isDataEmpty) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="glass-card p-6">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => navigate('/')}
+                            className="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors"
+                        >
+                            <svg className="w-5 h-5 text-dark-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div className="flex-1">
+                            <h1 className="text-2xl font-bold text-dark-100">{data.team_name}</h1>
+                        </div>
+                    </div>
+                </div>
+                <div className="glass-card p-8">
+                    <EmptyState
+                        title="Nessun membro attivo"
+                        message="Non ci sono ore registrate per questo team nel periodo selezionato."
+                        icon={
+                            <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        }
+                        actionLabel="Torna alla Dashboard"
+                        onAction={() => navigate('/')}
+                    />
+                </div>
+            </div>
+        )
+    }
 
     // Calculate completion percentage
     const completionPercentage = data.expected_hours > 0

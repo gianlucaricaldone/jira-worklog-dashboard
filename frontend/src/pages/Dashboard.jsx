@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getDashboard } from '../api/client'
 import { useFetch, formatHours } from '../hooks/useData'
-import { StatCard, TeamCard, EpicCard, CircularProgress, CardSkeleton, ErrorState } from '../components/Cards'
+import { StatCard, TeamCard, EpicCard, CircularProgress, CardSkeleton, ErrorState, EmptyState } from '../components/Cards'
 import { TrendChart, ComparisonBarChart, ChartCard } from '../components/Charts'
 
 export default function Dashboard({ dateRange, selectedInstance }) {
@@ -43,6 +43,35 @@ export default function Dashboard({ dateRange, selectedInstance }) {
     }
 
     if (!data) return null
+
+    // Check if data is empty (no teams and no epics)
+    const isDataEmpty = data.teams.length === 0 && data.top_epics.length === 0
+
+    if (isDataEmpty) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold text-dark-100">Dashboard</h1>
+                        <p className="text-dark-400">Panoramica delle ore registrate</p>
+                    </div>
+                </div>
+                <div className="glass-card p-8">
+                    <EmptyState
+                        title="Nessun dato disponibile"
+                        message="Configura un'istanza JIRA nelle Impostazioni e sincronizza i worklog per visualizzare la dashboard."
+                        icon={
+                            <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                        }
+                        actionLabel="Vai alle Impostazioni"
+                        onAction={() => navigate('/settings')}
+                    />
+                </div>
+            </div>
+        )
+    }
 
     // Transform team data for bar chart
     const teamChartData = data.teams.map(t => ({

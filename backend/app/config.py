@@ -70,8 +70,16 @@ def load_config_from_file(path: Path) -> AppConfig:
 @lru_cache()
 def get_config() -> AppConfig:
     """Get the application configuration (cached)."""
-    config_path = find_config_file()
-    return load_config_from_file(config_path)
+    try:
+        config_path = find_config_file()
+        return load_config_from_file(config_path)
+    except FileNotFoundError:
+        # Return empty config when no config file exists
+        return AppConfig(
+            jira_instances=[],
+            teams=[],
+            settings=SettingsConfig()
+        )
 
 
 def get_user_team(email: str, config: AppConfig) -> Optional[str]:

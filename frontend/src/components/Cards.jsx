@@ -250,7 +250,7 @@ export function CardSkeleton({ count = 1 }) {
 /**
  * Empty state component
  */
-export function EmptyState({ title, message, icon }) {
+export function EmptyState({ title, message, icon, action, actionLabel, onAction }) {
     return (
         <div className="flex flex-col items-center justify-center py-12 text-center">
             {icon && (
@@ -260,6 +260,14 @@ export function EmptyState({ title, message, icon }) {
             )}
             <h3 className="text-lg font-semibold text-dark-200 mb-2">{title}</h3>
             <p className="text-dark-400 max-w-md">{message}</p>
+            {(action || onAction) && (
+                <button
+                    onClick={onAction || action}
+                    className="mt-4 btn-primary"
+                >
+                    {actionLabel || "Vai"}
+                </button>
+            )}
         </div>
     )
 }

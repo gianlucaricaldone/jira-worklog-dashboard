@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getUserDetail } from '../api/client'
 import { formatHours } from '../hooks/useData'
-import { StatCard, ProgressBar, EpicCard, ErrorState } from '../components/Cards'
+import { StatCard, ProgressBar, EpicCard, ErrorState, EmptyState } from '../components/Cards'
 import { TrendChart, DistributionChart, ChartCard } from '../components/Charts'
 import WorklogCalendar from '../components/WorklogCalendar'
 
@@ -48,18 +48,61 @@ export default function UserView({ dateRange, selectedInstance }) {
 
     if (!data) return null
 
-    // Calculate completion percentage
-    const completionPercentage = data.expected_hours > 0
-        ? (data.total_hours / data.expected_hours) * 100
-        : 0
+    // Check if data is empty
+    const isDataEmpty = data.worklogs.length === 0 && data.total_hours === 0
 
-    // Get initials
+    // Get initials (needed for empty state too)
     const initials = data.full_name
         .split(' ')
         .map(n => n[0])
         .join('')
         .toUpperCase()
         .slice(0, 2)
+
+    if (isDataEmpty) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="glass-card p-6">
+                    <div className="flex items-start gap-4">
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors"
+                        >
+                            <svg className="w-5 h-5 text-dark-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div className="w-16 h-16 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-glow">
+                            <span className="text-white font-bold text-xl">{initials}</span>
+                        </div>
+                        <div className="flex-1">
+                            <h1 className="text-2xl font-bold text-dark-100">{data.full_name}</h1>
+                            <p className="text-dark-400">{data.email}</p>
+                            <span className="badge-blue mt-2 inline-block">{data.team_name}</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="glass-card p-8">
+                    <EmptyState
+                        title="Nessun worklog registrato"
+                        message="Non ci sono ore registrate per questo utente nel periodo selezionato."
+                        icon={
+                            <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        }
+                        actionLabel="Torna indietro"
+                        onAction={() => navigate(-1)}
+                    />
+                </div>
+            </div>
+        )
+    }
+
+    // Calculate completion percentage
+    const completionPercentage = data.expected_hours > 0
+        ? (data.total_hours / data.expected_hours) * 100
+        : 0
 
     // Transform initiative data for pie chart
     const initiativePieData = data.epics.slice(0, 6).map(e => ({

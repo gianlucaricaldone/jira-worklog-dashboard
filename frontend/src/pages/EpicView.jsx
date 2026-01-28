@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getEpics, getEpicDetail } from '../api/client'
 import { formatHours } from '../hooks/useData'
-import { EpicCard, UserCard, StatCard, ErrorState, CardSkeleton } from '../components/Cards'
+import { EpicCard, UserCard, StatCard, ErrorState, CardSkeleton, EmptyState } from '../components/Cards'
 import { TrendChart, ComparisonBarChart, ChartCard } from '../components/Charts'
 import WorklogCalendar from '../components/WorklogCalendar'
 
@@ -121,6 +121,47 @@ export default function EpicView({ dateRange, selectedInstance }) {
 }
 
 function EpicDetailView({ data, navigate }) {
+    // Check if data is empty
+    const isDataEmpty = data.worklogs.length === 0 && data.total_hours === 0
+
+    if (isDataEmpty) {
+        return (
+            <div className="space-y-6 animate-fade-in">
+                <div className="glass-card p-6">
+                    <div className="flex items-start gap-4">
+                        <button
+                            onClick={() => navigate('/epics')}
+                            className="p-2 rounded-lg bg-dark-700 hover:bg-dark-600 transition-colors"
+                        >
+                            <svg className="w-5 h-5 text-dark-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                                <span className="badge-purple">{data.epic_key}</span>
+                            </div>
+                            <h1 className="text-2xl font-bold text-dark-100">{data.epic_name}</h1>
+                        </div>
+                    </div>
+                </div>
+                <div className="glass-card p-8">
+                    <EmptyState
+                        title="Nessun worklog registrato"
+                        message="Non ci sono ore registrate per questa iniziativa nel periodo selezionato."
+                        icon={
+                            <svg className="w-8 h-8 text-dark-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        }
+                        actionLabel="Torna alle Iniziative"
+                        onAction={() => navigate('/epics')}
+                    />
+                </div>
+            </div>
+        )
+    }
+
     // Transform contributor data for bar chart
     const contributorChartData = data.contributors.map(c => ({
         name: c.full_name.split(' ')[0],

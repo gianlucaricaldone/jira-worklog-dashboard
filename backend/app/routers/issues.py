@@ -66,8 +66,22 @@ async def get_issue_detail(
     all_worklogs = await storage.get_worklogs_in_range(start_date, end_date)
     issue_worklogs = [w for w in all_worklogs if w.issue_key == issue_key]
 
+    # Handle empty worklogs - return empty response instead of 404
     if not issue_worklogs:
-        raise HTTPException(status_code=404, detail=f"No worklogs found for issue {issue_key}")
+        return IssueDetailResponse(
+            issue_key=issue_key,
+            issue_summary="Issue sconosciuta",
+            jira_instance="unknown",
+            parent_key=None,
+            parent_name=None,
+            parent_type=None,
+            epic_key=None,
+            epic_name=None,
+            total_hours=0,
+            contributors=[],
+            daily_trend=[],
+            worklogs=[]
+        )
 
     # Get issue metadata from first worklog
     first_wl = issue_worklogs[0]

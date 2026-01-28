@@ -82,10 +82,16 @@ async def get_epic_detail(
         if w.parent_key == epic_key or w.epic_key == epic_key
     ]
 
+    # Handle empty worklogs - return empty response instead of 404
     if not initiative_worklogs:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No worklogs found for initiative '{epic_key}'"
+        return EpicDetailResponse(
+            epic_key=epic_key,
+            epic_name="Iniziativa sconosciuta",
+            jira_instance="unknown",
+            total_hours=0,
+            contributors=[],
+            daily_trend=calculate_daily_trend([], start_date, end_date),
+            worklogs=[]
         )
 
     # Get initiative info from first worklog (prefer parent_key data)
